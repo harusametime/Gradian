@@ -7,6 +7,7 @@ Created on 2015/07/14
 @author: samejima
 '''
 
+import math
 import numpy as np
 from statsmodels.tsa.ar_model import AR
 from statsmodels.tsa.arima_model import ARMA
@@ -81,28 +82,50 @@ def GenWorkload(ac_mat, load_mat, delay_mat):
             else: continue
             
     return wl_list
-    
+
+def remove_trend (ts):
+    for i in range(len(ts[0])-1):
+        ts[0, i] = ts[0, i]- ts[0, i+1]
+        ts[0, i] = math.sqrt(ts[0,i])
+    return ts
     
 if __name__ == '__main__':
     wl_mat = GenData0()
     
     ar_model = AR(wl_mat[0])
-    arma_model = ARMA(wl_mat[0],order = (5,5))
+    arma_model = ARMA(wl_mat[0],order = (2,2))
     ar_res = ar_model.fit()
     arma_res = arma_model.fit()
     for wl in wl_mat[0]:
         print wl,
     print
     
-    predict = ar_model.score(wl_mat[0])
+    predict = ar_res.resid
     for pr in predict:
         print pr,
     print
     
-    predict = arma_res.score()
+    predict = arma_res.resid
     for pr in predict:
         print pr,
     print 
+    
+    
+    for i in range(len(wl_mat[0])-1):
+        wl_mat[0, i] = wl_mat[0, i]- wl_mat[0, i+1]
+    
+    ar_model = AR(wl_mat[0])
+    arma_model = ARMA(wl_mat[0],order = (2,2))
+    ar_res = ar_model.fit()
+    arma_res = arma_model.fit()
+    for wl in wl_mat[0]:
+        print wl,
+    print
+    
+    predict = ar_res.resid
+    for pr in predict:
+        print pr,
+    print
         
     
     
