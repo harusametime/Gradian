@@ -8,11 +8,8 @@ Created on 2015/07/14
 '''
 
 import numpy as np
-from numpy.random import *
-from scipy import stats
-import pandas
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
+from statsmodels.tsa.ar_model import AR
+from statsmodels.tsa.arima_model import ARMA
 
 
 def GenData0():
@@ -67,11 +64,11 @@ def GenWorkload(ac_mat, load_mat, delay_mat):
         for e in range(n_edge):
             
             if load_mat[e][1] >0:
-                load = normal(load_mat[e][0],load_mat[e][1])
+                load = np.random.normal(load_mat[e][0],load_mat[e][1])
             else:
                 load = load_mat[e][0]
             if delay_mat[e][1] >0:
-                delay = normal(delay_mat[e][0],delay_mat[e][1])
+                delay = np.random.normal(delay_mat[e][0],delay_mat[e][1])
             else:
                 delay = delay_mat[e][0]
                 
@@ -89,8 +86,24 @@ def GenWorkload(ac_mat, load_mat, delay_mat):
 if __name__ == '__main__':
     wl_mat = GenData0()
     
-    for wl_list in wl_mat:
-        for wl in wl_list:
-            print wl,
-        print 
+    ar_model = AR(wl_mat[0])
+    arma_model = ARMA(wl_mat[0],order = (5,5))
+    ar_res = ar_model.fit()
+    arma_res = arma_model.fit()
+    for wl in wl_mat[0]:
+        print wl,
+    print
+    
+    predict = ar_model.score(wl_mat[0])
+    for pr in predict:
+        print pr,
+    print
+    
+    predict = arma_res.score()
+    for pr in predict:
+        print pr,
+    print 
+        
+    
+    
     
