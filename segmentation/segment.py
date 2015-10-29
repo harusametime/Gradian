@@ -35,6 +35,7 @@ def GenData0():
         ac_server2.append(access[1])
     fp.close()
     
+    
     wl_server1 = GenWorkload(np.array([ac_server1]), 
                              [[0.4, 0.02]],
                               [[0, 0]])
@@ -92,7 +93,7 @@ def remove_trend (ts):
 if __name__ == '__main__':
     wl_mat = GenData0()
     
-    ar_model = AR(wl_mat[0])
+    ar_model = AR(remove_trend(wl_mat[0]))
     arma_model = ARMA(wl_mat[0],order = (2,2))
     ar_res = ar_model.fit()
     arma_res = arma_model.fit()
