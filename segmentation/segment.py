@@ -7,6 +7,7 @@ Created on 2015/07/14
 @author: samejima
 '''
 
+import os.path
 import math
 import numpy as np
 from statsmodels.tsa.ar_model import AR
@@ -85,13 +86,33 @@ def GenWorkload(ac_mat, load_mat, delay_mat):
     return wl_list
 
 def remove_trend (ts):
-    for i in range(len(ts[0])-1):
+    for i in range(ts[0].size-1):
         ts[0, i] = ts[0, i]- ts[0, i+1]
         ts[0, i] = math.sqrt(ts[0,i])
     return ts
+
+def show_alldata(ts_list):
+    for ts in ts_list:
+        for s in ts:
+            print s,
+        print
     
 if __name__ == '__main__':
-    wl_mat = GenData0()
+    
+    datapath = "../data/alldata.txt";
+    if  os.path.isfile(datapath):
+        wl_mat = []
+        fp = open(datapath, 'r')
+        for line in fp.readlines():
+            wl_list = line.rstrip("\n").split("\t")
+            wl_mat.append(wl_list)
+        wl_mat = np.array(wl_mat)
+        fp.close()
+    else:
+        print "Generate data randomly and stored to " + datapath
+        wl_mat = GenData0()
+    
+    show_alldata(wl_mat)
     
     ar_model = AR(remove_trend(wl_mat[0]))
     arma_model = ARMA(wl_mat[0],order = (2,2))
