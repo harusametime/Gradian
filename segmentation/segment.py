@@ -8,8 +8,9 @@ Created on 2015/07/14
 '''
 
 import os.path
-import math
 import numpy as np
+from pystruct.models import GraphCRF
+from pystruct.learners import FrankWolfeSSVM
 from statsmodels.tsa.ar_model import AR
 from statsmodels.tsa.arima_model import ARMA
 
@@ -85,17 +86,22 @@ def GenWorkload(ac_mat, load_mat, delay_mat):
             
     return wl_list
 
-def remove_trend (ts):
-    for i in range(ts[0].size-1):
-        ts[0, i] = ts[0, i]- ts[0, i+1]
-        ts[0, i] = math.sqrt(ts[0,i])
-    return ts
 
 def show_alldata(ts_list):
     for ts in ts_list:
         for s in ts:
             print s,
         print
+        
+def gen_CRFData(wl_mat, interval):
+    length = wl_mat.shape(1)
+    n_nodes = wl_mat.shape(0)
+    print length
+    if(length <= interval):
+        print "interval is too long for length."
+    else:
+        X = np.array(np.zeros(n_nodes,interval)*(length-interval))
+        #y = np.array(0*)
     
 if __name__ == '__main__':
     
@@ -114,6 +120,33 @@ if __name__ == '__main__':
     
     show_alldata(wl_mat)
     
+    '''
+    X: Matrices of time-series CPU data of each server
+       when t=[0, interval]            ... -> X[0]
+             =[1, interval+1]          ... -> X[1]
+             =...
+             =[Length-interval-1, Length-1]    ... -> X[Length-interval-1]
+             
+       The number of Matrices is Length-interval.
+       Shape of each X is (#server, interval)
+           e.g.       t=Length-1    t=Length-2
+           Server1    3.6[%]    4.5[%]...
+           Server2    2.5[%]    4.4[%]...
+           
+    y: Arrays of CPU data of each server
+       when t = interval + 1    ...   -> y[0]
+              = interval + 2    ...   -> y[1]
+       Shape of y is (#server, )
+           e.g.        t=Length
+           Server1    3.6[%]   
+           Server2    2.5[%]   
+    '''
+    X, y = gen_CRFData(wl_mat,interval=5)
+    
+    model = GraphCRF(directed=True, inference_method="max-product")
+    
+    
+    '''
     ar_model = AR(remove_trend(wl_mat[0]))
     arma_model = ARMA(wl_mat[0],order = (2,2))
     ar_res = ar_model.fit()
@@ -148,7 +181,7 @@ if __name__ == '__main__':
     for pr in predict:
         print pr,
     print
-        
+    '''    
     
     
     
