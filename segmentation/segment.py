@@ -9,6 +9,7 @@ Created on 2015/07/14
 
 import os.path
 import numpy as np
+import sys
 from pystruct.models import GraphCRF
 from pystruct.learners import FrankWolfeSSVM
 from statsmodels.tsa.ar_model import AR
@@ -94,26 +95,23 @@ def show_alldata(ts_list):
         print
         
 def gen_CRFData(wl_mat, interval):
-    length = wl_mat.shape(1)
-    n_nodes = wl_mat.shape(0)
-    print length
+    length = wl_mat.shape[1]
+    n_nodes = wl_mat.shape[0]
+    
     if(length <= interval):
         print "interval is too long for length."
-    else:
-        X = np.array(np.zeros(n_nodes,interval)*(length-interval))
-        #y = np.array(0*)
+        sys.exit()
+        
+    X = np.array(np.zeros(n_nodes,interval)*(length-interval))
+    y = np.zeros((n_nodes,))
+    
+    return X, y
     
 if __name__ == '__main__':
     
     datapath = "../data/alldata.txt";
     if  os.path.isfile(datapath):
-        wl_mat = []
-        fp = open(datapath, 'r')
-        for line in fp.readlines():
-            wl_list = line.rstrip("\n").split("\t")
-            wl_mat.append(wl_list)
-        wl_mat = np.array(wl_mat)
-        fp.close()
+        wl_mat = np.loadtxt(datapath)
     else:
         print "Generate data randomly and stored to " + datapath
         wl_mat = GenData0()
