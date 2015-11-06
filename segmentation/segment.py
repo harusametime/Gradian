@@ -101,8 +101,17 @@ def gen_CRFData(wl_mat, interval):
     if(length <= interval):
         print "interval is too long for length."
         sys.exit()
+    
+    
+    X = np.array(length-interval)#(np.zeros((4,5)),np.zeros((4,5))))
+    
+    for i in range(length-interval):
+        X[i] = np.matrix(4,5) 
+        X[i] = np.array((wl_mat[:,i:i+interval]))
+        print X[i]
         
-    X = np.array(np.zeros(n_nodes,interval)*(length-interval))
+        sys.exit()
+        #
     y = np.zeros((n_nodes,))
     
     return X, y
