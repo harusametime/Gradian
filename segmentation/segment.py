@@ -118,7 +118,18 @@ def gen_CRFData(wl_mat, interval):
     
     return X, y
 
-    
+
+def getLikelihood(wl_mat, exog, endog):
+    from scipy.optimize import brute
+    grid = (slice(1, 3, 1), slice(1, 3, 1), slice(1, 3, 1))
+    brute(objfunc, grid, args=(exog, endog), finish=None)
+
+def objfunc(order, exog, endog):
+    from statsmodels.tsa.arima_model import ARIMA
+    fit = ARIMA(endog, order, exog).fit()
+    return fit.aic()
+
+
     
 
 
