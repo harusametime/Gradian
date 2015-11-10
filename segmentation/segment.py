@@ -14,6 +14,7 @@ from pystruct.models import GraphCRF
 from pystruct.learners import FrankWolfeSSVM
 from statsmodels.tsa.ar_model import AR
 from statsmodels.tsa.arima_model import ARMA
+from cv2 import inRange
 
 
 def GenData0():
@@ -103,16 +104,16 @@ def gen_CRFData(wl_mat, interval):
         sys.exit()
     
     
-    X = np.array(length-interval)#(np.zeros((4,5)),np.zeros((4,5))))
+    X = np.empty(length-interval,dtype=np.matrix)
+    for i in range(length-interval):
+        X[i] = np.array((wl_mat[:,i:i+interval]))
+        
+    y = np.empty(length-interval,dtype=np.matrix)
     
     for i in range(length-interval):
-        X[i] = np.matrix(4,5) 
-        X[i] = np.array((wl_mat[:,i:i+interval]))
-        print X[i]
-        
-        sys.exit()
-        #
-    y = np.zeros((n_nodes,))
+        y[i] = np.array((wl_mat[:,i+interval]))
+        y[i] = y[i].T
+    
     
     return X, y
     
@@ -150,8 +151,31 @@ if __name__ == '__main__':
     '''
     X, y = gen_CRFData(wl_mat,interval=5)
     
+    
+    X = X[:100]
+    y = y[:100]
+    
+    #Add edges
+    for i in range(X.shape[0]):
+        X[i] = [X[i], np.vstack([np.arange(5-1),np.arange(1,5)])]
+    
     model = GraphCRF(directed=True, inference_method="max-product")
     
+    for i in range(X.shape[0]):
+        
+        X_test = X[i]
+        y_test = y[i]
+        X_train = np.delete(X,i)
+        y_train = np.delete(y,i)
+    
+    ssvm = FrankWolfeSSVM(model=model, C=.1, max_iter=10)
+    ssvm.fit(X_train,y_train)
+    
+    print ssvm.predict(X_test)
+    print y_test
+    
+    sys.exit()
+      
     
     '''
     ar_model = AR(remove_trend(wl_mat[0]))
