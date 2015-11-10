@@ -10,6 +10,7 @@ Created on 2015/07/14
 import os.path
 import numpy as np
 import sys
+import sklearn
 from pystruct.models import GraphCRF
 from pystruct.learners import FrankWolfeSSVM
 from statsmodels.tsa.ar_model import AR
@@ -116,7 +117,11 @@ def gen_CRFData(wl_mat, interval):
     
     
     return X, y
+
     
+    
+
+
 if __name__ == '__main__':
     
     datapath = "../data/alldata.txt";
@@ -126,7 +131,10 @@ if __name__ == '__main__':
         print "Generate data randomly and stored to " + datapath
         wl_mat = GenData0()
     
-    show_alldata(wl_mat)
+    #show_alldata(wl_mat)
+    
+    wl_mat = np.rint(wl_mat)
+    wl_mat = wl_mat.astype(int)
     
     '''
     X: Matrices of time-series CPU data of each server
@@ -150,32 +158,44 @@ if __name__ == '__main__':
            Server2    2.5[%]   
     '''
     X, y = gen_CRFData(wl_mat,interval=5)
-    
+   
     
     X = X[:100]
     y = y[:100]
     
+    
     #Add edges
     for i in range(X.shape[0]):
-        X[i] = [X[i], np.vstack([np.arange(5-1),np.arange(1,5)])]
-    
+        X[i] = [X[i], np.vstack([(0,1),(2,2)])]
+        
     model = GraphCRF(directed=True, inference_method="max-product")
     
+    X_train, X_test, y_train, y_test = sklearn.cross_validation.train_test_split(X,y, test_size =0.5, random_state=0)
+    ssvm = FrankWolfeSSVM(model=model, C=.1, max_iter=10)
+    ssvm.fit(X_train,y_train)
+    print ssvm.score(X_test, y_test)
+    print ssvm.predict(X_test)
+    print y_test
+    
+    '''
     for i in range(X.shape[0]):
         
+        X_train, X_test = X[] 
         X_test = X[i]
         y_test = y[i]
         X_train = np.delete(X,i)
         y_train = np.delete(y,i)
+        
     
-    ssvm = FrankWolfeSSVM(model=model, C=.1, max_iter=10)
-    ssvm.fit(X_train,y_train)
+        ssvm = FrankWolfeSSVM(model=model, C=.1, max_iter=10)
+        ssvm.fit(X_train,y_train)
+        print ssvm.model
+        print X_test[1].shape
+        print ssvm.score(X_test, y_test)
+        print y_test
     
-    print ssvm.predict(X_test)
-    print y_test
-    
-    sys.exit()
-      
+        sys.exit()
+    '''
     
     '''
     ar_model = AR(remove_trend(wl_mat[0]))
