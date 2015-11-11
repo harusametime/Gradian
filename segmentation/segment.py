@@ -16,6 +16,8 @@ from pystruct.learners import FrankWolfeSSVM
 from statsmodels.tsa.ar_model import AR
 from statsmodels.tsa.arima_model import ARMA
 from cv2 import inRange
+from gtk.keysyms import End
+from numpy.linalg import LinAlgError
 
 
 def GenData0():
@@ -119,15 +121,20 @@ def gen_CRFData(wl_mat, interval):
     return X, y
 
 
-def getLikelihood(wl_mat, exog, endog):
+def getLikelihood(exog,endog):
     from scipy.optimize import brute
     grid = (slice(1, 3, 1), slice(1, 3, 1), slice(1, 3, 1))
-    brute(objfunc, grid, args=(exog, endog), finish=None)
+    print brute(objfunc, grid, args=(exog, endog), finish=None)
 
 def objfunc(order, exog, endog):
     from statsmodels.tsa.arima_model import ARIMA
-    fit = ARIMA(endog, order, exog).fit()
-    return fit.aic()
+    try:
+        fit = ARIMA(endog, order, exog).fit()
+        return fit.aic()
+    except(ValueError, LinAlgError):
+        pass
+    
+
 
 
     
@@ -145,6 +152,8 @@ if __name__ == '__main__':
     #show_alldata(wl_mat)
     
     wl_mat = np.rint(wl_mat)
+    for wl in wl_mat:
+        getLikelihood(wl,np.zeros(len(wl)))
     wl_mat = wl_mat.astype(int)
     
     '''
