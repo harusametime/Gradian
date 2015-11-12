@@ -121,25 +121,38 @@ def gen_CRFData(wl_mat, interval):
     return X, y
 
 
-def getLikelihood(endog,exog, order = None):
+def getLikelihood(predict_start, endog,exog, order = None):
     
+    '''
+    train_en = endog[:predict_start-1]
+    test_en = endog[predict_start:]
+    print train_en
+    print test_en
+    train_ex = exog[:predict_start-1]
+    test_ex = exog[predict_start:]
+    '''
     # Automatically determine values of orders
     if order is None:
         from scipy.optimize import brute
-        grid = (slice(2, 3, 1), slice(1, 3, 1),slice(1, 3, 1))
+        grid = (slice(1, 3, 1), slice(1, 3, 1),slice(1, 3, 1))
         order =  brute(objfunc, grid, args=(exog, endog), finish=None)
         
-    # Model fits given data (endog) with optimized order
+        # Model fits given data (endog) with optimized order
+        order = order.astype(int)
+        
     print "*********************************************"
     print "Choose order of ",
-    order = order.astype(int)
-    print "Optimized order",
     print order
     print "*********************************************"
     
-    fit = ARIMA(endog,order).fit()
-    likelihood = fit.score(endog)
-    print likelihood
+    model = ARIMA(endog,order).fit()
+    
+    #Evaluate last 30 data
+    x = model.forecast(30)
+    for i in x:
+        print i,
+        
+    print
     #likelihood = np.array.empty(len(endog))
     #for e in range(len(endog)):
     #    likelihood[e] = fit.
@@ -169,8 +182,9 @@ if __name__ == '__main__':
     wl_mat = np.rint(wl_mat)
     for wl in wl_mat:
         print wl
-        getLikelihood(wl,np.zeros(len(wl)))
+        getLikelihood(100,wl,np.zeros(len(wl)),order=[1,1,2])
         #getLikelihood(wl,np.zeros(len(wl)),order=(1,2,1))
+        
     wl_mat = wl_mat.astype(int)
     
     '''
