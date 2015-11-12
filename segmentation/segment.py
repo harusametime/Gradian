@@ -18,7 +18,7 @@ from statsmodels.tsa.arima_model import ARMA
 from cv2 import inRange
 from gtk.keysyms import End
 from numpy.linalg import LinAlgError
-
+from statsmodels.tsa.arima_model import ARIMA
 
 def GenData0():
     
@@ -121,23 +121,38 @@ def gen_CRFData(wl_mat, interval):
     return X, y
 
 
-def getLikelihood(exog,endog):
-    from scipy.optimize import brute
-    grid = (slice(1, 3, 1), slice(1, 3, 1), slice(1, 3, 1))
-    print brute(objfunc, grid, args=(exog, endog), finish=None)
+def getLikelihood(endog,exog, order = None):
+    
+    # Automatically determine values of orders
+    if order is None:
+        from scipy.optimize import brute
+        grid = (slice(2, 3, 1), slice(1, 3, 1),slice(1, 3, 1))
+        order =  brute(objfunc, grid, args=(exog, endog), finish=None)
+        
+    # Model fits given data (endog) with optimized order
+    print "*********************************************"
+    print "Choose order of ",
+    order = order.astype(int)
+    print "Optimized order",
+    print order
+    print "*********************************************"
+    
+    fit = ARIMA(endog,order).fit()
+    likelihood = fit.score(endog)
+    print likelihood
+    #likelihood = np.array.empty(len(endog))
+    #for e in range(len(endog)):
+    #    likelihood[e] = fit.
+        
+    
 
-def objfunc(order, exog, endog):
-    from statsmodels.tsa.arima_model import ARIMA
+def objfunc(order,exog, endog):
     try:
-        fit = ARIMA(endog, order, exog).fit()
-        return fit.aic()
-    except(ValueError, LinAlgError):
-        pass
-    
+        fit = ARIMA(endog, order).fit()
+        return fit.aic
+    except ValueError:
+        return sys.maxint
 
-
-
-    
 
 
 if __name__ == '__main__':
@@ -153,7 +168,9 @@ if __name__ == '__main__':
     
     wl_mat = np.rint(wl_mat)
     for wl in wl_mat:
+        print wl
         getLikelihood(wl,np.zeros(len(wl)))
+        #getLikelihood(wl,np.zeros(len(wl)),order=(1,2,1))
     wl_mat = wl_mat.astype(int)
     
     '''
