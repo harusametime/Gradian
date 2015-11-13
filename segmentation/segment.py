@@ -121,7 +121,7 @@ def gen_CRFData(wl_mat, interval):
     return X, y
 
 
-def getLikelihood(predict_start, endog,exog, order = None):
+def getLikelihood(endog,exog, order = None,n_forecasted_data=1):
     
     '''
     train_en = endog[:predict_start-1]
@@ -148,11 +148,8 @@ def getLikelihood(predict_start, endog,exog, order = None):
     model = ARIMA(endog,order).fit()
     
     #Evaluate last 30 data
-    x = model.forecast(30)
-    for i in x:
-        print i,
-        
-    print
+    x = model.forecast(n_forecasted_data)
+    return x
     #likelihood = np.array.empty(len(endog))
     #for e in range(len(endog)):
     #    likelihood[e] = fit.
@@ -179,14 +176,32 @@ if __name__ == '__main__':
     
     #show_alldata(wl_mat)
     
-    wl_mat = np.rint(wl_mat)
-    for wl in wl_mat:
-        print wl
-        getLikelihood(100,wl,np.zeros(len(wl)),order=[1,1,2])
-        #getLikelihood(wl,np.zeros(len(wl)),order=(1,2,1))
-        
-    wl_mat = wl_mat.astype(int)
+    '''
+    "n_data_for_AR" indicates the number of data to fit AR model.
+    By using fitted model, next "n_forecasted" data is/are estimated.
+    Large "n_forecasted" does not make sense(approximately same as Linear regression.
+    '''
+    n_data_for_AR = 19
+    n_forecasted = 1
     
+    if wl_mat.shape[1]-n_data_for_AR-n_forecasted < 0:
+        print "Number of Data for AR must be smaller than number of entire data."
+        sys.exit()
+    elif n_data_for_AR ==0 or  n_forecasted ==0:
+        print "Data for AR is not given."
+        sys.exit()
+        
+    Likelihood_mat = np.empty((wl_mat.shape[0],wl_mat.shape[1]-n_data_for_AR-n_forecasted+1), dtype=np.float)
+    
+    wl_mat = np.rint(wl_mat)
+    for j in wl_mat.shape[0]:
+        wl = wl_mat[j]
+        for i in range(0,len(wl)-n_data_for_AR-n_forecasted):
+            # Extract data for AR from entire workload data and input it to the function
+            Likelihood_mat[j][i] = getLikelihood(wl[i:i+n_data_for_AR+n_forecasted-1],np.zeros(len(wl)),order=[1,1,2])
+            
+    Likelihood_mat = Likelihood_mat.astype(int)
+    #wl_mat = wl_mat.astype(int)
     '''
     X: Matrices of time-series CPU data of each server
        when t=[0, interval]            ... -> X[0]
