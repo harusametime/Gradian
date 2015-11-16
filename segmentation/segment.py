@@ -145,11 +145,11 @@ def getLikelihood(endog,exog, order = None,n_forecasted_data=1):
     print order
     print "*********************************************"
     
-    model = ARIMA(endog,order).fit()
+    model = ARIMA(endog,order).fit(full_output=False,disp=False)
     
-    #Evaluate last 30 data
+    # 1st element of array x is the forecasted data.
     x = model.forecast(n_forecasted_data)
-    return x
+    return x[0]
     #likelihood = np.array.empty(len(endog))
     #for e in range(len(endog)):
     #    likelihood[e] = fit.
@@ -158,7 +158,7 @@ def getLikelihood(endog,exog, order = None,n_forecasted_data=1):
 
 def objfunc(order,exog, endog):
     try:
-        fit = ARIMA(endog, order).fit()
+        fit = ARIMA(endog, order).fit(full_output=False,fdisp=False)
         return fit.aic
     except ValueError:
         return sys.maxint
@@ -194,13 +194,18 @@ if __name__ == '__main__':
     Likelihood_mat = np.empty((wl_mat.shape[0],wl_mat.shape[1]-n_data_for_AR-n_forecasted+1), dtype=np.float)
     
     wl_mat = np.rint(wl_mat)
-    for j in wl_mat.shape[0]:
+    for j in range(wl_mat.shape[0]):
         wl = wl_mat[j]
         for i in range(0,len(wl)-n_data_for_AR-n_forecasted):
             # Extract data for AR from entire workload data and input it to the function
-            Likelihood_mat[j][i] = getLikelihood(wl[i:i+n_data_for_AR+n_forecasted-1],np.zeros(len(wl)),order=[1,1,2])
-            
+            #y= getLikelihood(wl[i:i+n_data_for_AR+n_forecasted-1],np.zeros(len(wl)),order=[1,1,2])
+            Likelihood_mat[j][i] = getLikelihood(wl[i:i+n_data_for_AR+n_forecasted-1],np.zeros(len(wl)))
+        
+    Likelihood_mat = Likelihood_mat*10
     Likelihood_mat = Likelihood_mat.astype(int)
+    print Likelihood_mat
+    
+    
     #wl_mat = wl_mat.astype(int)
     '''
     X: Matrices of time-series CPU data of each server
