@@ -17,8 +17,9 @@ from statsmodels.tsa.ar_model import AR
 from statsmodels.tsa.arima_model import ARMA
 from cv2 import inRange
 from gtk.keysyms import End
-from numpy.linalg import LinAlgError
+from numpy.linalg.linalg import LinAlgError
 from statsmodels.tsa.arima_model import ARIMA
+from numpy import NaN
 
 def GenData0():
     
@@ -134,11 +135,19 @@ def getLikelihood(endog,exog, order = None,n_forecasted_data=1):
     # Automatically determine values of orders
     if order is None:
         from scipy.optimize import brute
-        grid = (slice(1, 3, 1), slice(1, 3, 1),slice(1, 3, 1))
-        order =  brute(objfunc, grid, args=(exog, endog), finish=None)
+        grid = (slice(1, 3, 1), slice(1, 3, 1),slice(0, 3, 1))
         
+        print "############################################"
+        print endog
+        print "############################################"
+        
+        try: 
+            order =  brute(objfunc, grid, args=(exog, endog), finish=None)
+            order = order.astype(int)
+        except :
+            order = [1,1,3]
         # Model fits given data (endog) with optimized order
-        order = order.astype(int)
+        
         
     print "*********************************************"
     print "Choose order of ",
@@ -160,7 +169,7 @@ def objfunc(order,exog, endog):
     try:
         fit = ARIMA(endog, order).fit(full_output=False,fdisp=False)
         return fit.aic
-    except ValueError:
+    except:
         return sys.maxint
 
 
@@ -199,8 +208,14 @@ if __name__ == '__main__':
         for i in range(0,len(wl)-n_data_for_AR-n_forecasted):
             # Extract data for AR from entire workload data and input it to the function
             #y= getLikelihood(wl[i:i+n_data_for_AR+n_forecasted-1],np.zeros(len(wl)),order=[1,1,2])
+            print "**************", i , j, "**************************" 
             Likelihood_mat[j][i] = getLikelihood(wl[i:i+n_data_for_AR+n_forecasted-1],np.zeros(len(wl)))
-        
+    
+    np.save('likelihood.npy', Likelihood_mat)
+    for i in Likelihood_mat:
+        for j in i:
+            print j,
+        print 
     Likelihood_mat = Likelihood_mat*10
     Likelihood_mat = Likelihood_mat.astype(int)
     print Likelihood_mat
